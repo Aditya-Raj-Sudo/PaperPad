@@ -93,6 +93,25 @@ while camera.isOpened():
 
     fgmask = fgbg.apply(frame)
     cv2.imshow('frame',fgmask)
+
+    try:
+        frame=cv2.flip(frame,1)
+        kernel = np.ones((3,3),np.uint8)
+
+        roi=frame[100:500, 100:500]
+
+        cv2.rectangle(frame,(100,100),(500,500),(0,255,0),0)
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+
+        lower_skin = np.array([0,20,70], dtype=np.uint8)
+        upper_skin = np.array([20,255,255], dtype=np.uint8)
+
+        mask = cv2.inRange(hsv, lower_skin, upper_skin)
+        mask = cv2.dilate(mask,kernel,iterations = 4)
+        mask = cv2.GaussianBlur(mask,(5,5),100)
+
+    except Exception as e:
+        print("Exception:", e)
     
     # attempt to identify green tip area
     # if len(points) >= 4:
