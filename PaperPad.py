@@ -26,6 +26,7 @@ top_line = 0
 bottom_line = 0
 
 
+# draw circle
 def draw_circle(event,x,y,flags,param):
     global points, points_logged, quad_logged
     if event == cv2.EVENT_LBUTTONDBLCLK:
@@ -46,27 +47,34 @@ def draw_circle(event,x,y,flags,param):
             points_logged = False
 
 
+# round up to even num for mouse movement smoothing
 def round_up_to_even(num):
     return math.ceil(num / 2.0) * 2
 
 
+# print sound bars - dev testing function
 def print_sound(indata, frames, time, status):
-    volume_norm = int(np.linalg.norm(indata)*10)
+    sensitivity = 40 # higher = more sensitive
+    volume_norm = int(np.linalg.norm(indata)*sensitivity)
     print('|' * volume_norm)
 
 
+# main thread
 def mainthread():
     global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
 
     while camera.isOpened():
+        # initialize camera
         ret, frame = camera.read()
         frame = cv2.flip(frame, 1)
         frame = cv2.bilateralFilter(frame, 5, 50, 100) # smoothing filter
 
+        # log frame size
         if not frame_size_logged:
             print("frame size:", frame.shape[1], frame.shape[0])
             frame_size_logged = True
 
+        # draw paper points
         cv2.setMouseCallback('original', draw_circle)
         for point in points:
             cv2.circle(frame, point, 5, (255,0,0), -1)
@@ -74,6 +82,7 @@ def mainthread():
         if len(points) >= 1:
             print(frame[points[0][1]-10][points[0][1]-10])
 
+        # log points
         if not points_logged:
             print("points:", points)
             points_logged = True
@@ -106,6 +115,7 @@ def mainthread():
             BR = (0, 0)
             BL = (0, 0)
         
+        # log quad
         if not quad_logged:
             if len(points) >= 4:
                 top_line = (TL[1] + TR[1])//2
@@ -113,6 +123,7 @@ def mainthread():
             print("quad:", TL, TR, BR, BL)
             quad_logged = True
 
+        # detect hand and pen/pencil tip
         try:
             kernel = np.ones((3,3),np.uint8)
 
@@ -240,20 +251,21 @@ def mainthread():
                 mouse_locked = False
 
 
+# sound thread
 def soundthread():
     global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
     with sounddevice.InputStream(callback=print_sound):
         sounddevice.sleep(60*60*1000)
 
 
-# creating threads 
+# creating threads
 t1 = threading.Thread(target=mainthread, name='t1')
 t2 = threading.Thread(target=soundthread, name='t2')
 
-# starting threads 
-t1.start() 
-t2.start() 
+# starting threads
+t1.start()
+t2.start()
 
-# wait until all threads finish 
-t1.join() 
-t2.join() 
+# wait until all threads finish
+t1.join()
+t2.join()
