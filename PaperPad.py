@@ -98,47 +98,45 @@ while camera.isOpened():
         frame=cv2.flip(frame,1)
         kernel = np.ones((3,3),np.uint8)
 
-        #define roi which is a small square on screen
+        # define roi which is a small square on screen
         roi=frame[100:500, 100:500]
-
         cv2.rectangle(frame,(100,100),(500,500),(0,255,0),0)
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
         # range of the skin colour is defined
         lower_skin = np.array([0,48,80], dtype=np.uint8)
-        # lower_skin = np.array([0,20,70], dtype=np.uint8)
         upper_skin = np.array([20,255,255], dtype=np.uint8)
 
-        #extract skin colur image
+        # extract skin colur image
         mask = cv2.inRange(hsv, lower_skin, upper_skin)
 
-        #extrapolate the hand to fill dark spots within
+        # dilate the hand to fill dark spots in it
         mask = cv2.dilate(mask,kernel,iterations = 4)
 
-        #image is blurred using GBlur
+        # blur image
         mask = cv2.GaussianBlur(mask,(5,5),100)
 
-        #find contours
+        # find contours
         contours,hierarchy= cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-        #find contour of max area(hand)
+        # find contour of max area (hand)
         cnt = max(contours, key = lambda x: cv2.contourArea(x))
 
-        #approx the contour a little
+        # approx the contour
         epsilon = 0.0005*cv2.arcLength(cnt,True)
         approx= cv2.approxPolyDP(cnt,epsilon,True)
 
-        #make convex hull around hand
+        # make convex hull around hand
         hull = cv2.convexHull(cnt)
 
-        #define area of hull and area of hand
+        # define area of hull and area of hand
         areahull = cv2.contourArea(hull)
         areacnt = cv2.contourArea(cnt)
 
-        #find the percentage of area not covered by hand in convex hull
+        # find the percentage of area not covered by hand in convex hull
         arearatio=((areahull-areacnt)/areacnt)*100
 
-        #find the defects in convex hull with respect to hand
+        # find the defects in convex hull with respect to hand
         hull = cv2.convexHull(approx, returnPoints=False)
         defects = cv2.convexityDefects(approx, hull)
 
@@ -177,23 +175,10 @@ while camera.isOpened():
             
         l+=1
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-        cv2.imshow('mask',mask)
         cv2.imshow('frame',frame)
+
     except Exception as e:
         print("Exception:", e)
-    
-    # attempt to identify green tip area
-    # if len(points) >= 4:
-        # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # bound = 100
-        # lower_bound = np.array([20, 30, 40])
-        # upper_bound = np.array([60, 90, 90])
-        # mask = cv2.inRange(hsv, lower_bound, upper_bound)
-        # res = cv2.bitwise_and(frame, frame, mask=mask)
-        # cv2.imshow('mask', mask)
-        # cv2.imshow('res', res)
 
     # Keyboard press functions
     k = cv2.waitKey(20) & 0xFF
