@@ -5,7 +5,6 @@ import math
 # Camera
 camera = cv2.VideoCapture(0) # 0 for built-in webcam, 1 for external webcam
 camera.set(10,200)
-fgbg = cv2.createBackgroundSubtractorMOG2(history=1)
 
 
 # Variables
@@ -90,9 +89,16 @@ while camera.isOpened():
     if not quad_logged:
         print("quad:", TL, TR, BR, BL)
         quad_logged = True
-
-    fgmask = fgbg.apply(frame)
-    cv2.imshow('frame',fgmask)
+    
+    if len(points) >= 4:
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        bound = 100
+        lower_bound = np.array([20, 30, 40])
+        upper_bound = np.array([60, 90, 90])
+        mask = cv2.inRange(hsv, lower_bound, upper_bound)
+        res = cv2.bitwise_and(frame, frame, mask=mask)
+        cv2.imshow('mask', mask)
+        cv2.imshow('res', res)
 
     # Keyboard press functions
     k = cv2.waitKey(20) & 0xFF
