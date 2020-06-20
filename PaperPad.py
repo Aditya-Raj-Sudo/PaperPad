@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import math
+import mousecontrol
 
 # Camera
 camera = cv2.VideoCapture(0) # 0 for built-in webcam, 1 for external webcam
@@ -18,6 +19,8 @@ TR = (0, 0)
 BR = (0, 0)
 BL = (0, 0)
 quad_logged = False
+last_thumb_point = (9999, 9999)
+thumb_pos_locked = False
 
 
 def draw_circle(event,x,y,flags,param):
@@ -38,6 +41,10 @@ def draw_circle(event,x,y,flags,param):
                 if len(points) <= 4:
                     quad_logged = False
                 points_logged = False
+
+
+def round_up_to_even(num):
+    return math.ceil(num / 2.0) * 2
 
 
 while camera.isOpened():
@@ -178,11 +185,25 @@ while camera.isOpened():
             x_trans = 73
             y_trans = 103
             if start[0] < thumb_point[0]:
-                thumb_point = (start[0]+x_trans, start[1]+y_trans)
+                if thumb_pos_locked:
+                    if math.sqrt(abs(start[0]+x_trans-thumb_point[0])**2 + abs(start[1]+y_trans-thumb_point[1])**2) < 20:
+                        thumb_point = (round_up_to_even(start[0]+x_trans), round_up_to_even(start[1]+y_trans))
+                    else:
+                        thumb_point = last_thumb_point
+                else:
+                    thumb_point = (round_up_to_even(start[0]+x_trans), round_up_to_even(start[1]+y_trans))
             if end[0] < thumb_point[0]:
-                thumb_point = (end[0]+x_trans, end[1]+y_trans)
+                if thumb_pos_locked:
+                    if math.sqrt(abs(end[0]+x_trans-thumb_point[0])**2 + abs(end[1]+y_trans-thumb_point[1])**2) < 20:
+                        thumb_point = (round_up_to_even(end[0]+x_trans), round_up_to_even(end[1]+y_trans))
+                    else:
+                        thumb_point = last_thumb_point
+                else:
+                    thumb_point = (round_up_to_even(end[0]+x_trans), round_up_to_even(end[1]+y_trans))
         
+        last_thumb_point = thumb_point
         cv2.circle(frame, thumb_point, 5, (0,0,255), -1)
+        mousecontrol.mouse_move(int(thumb_point[0]), frame.shape[0]-int(thumb_point[1]))
 
         num_defects += 1
 
@@ -197,3 +218,8 @@ while camera.isOpened():
         camera.release()
         cv2.destroyAllWindows()
         break
+    elif k == ord('a'):
+        if not thumb_pos_locked:
+            thumb_pos_locked = True
+        else:
+            thumb_pos_locked = False
