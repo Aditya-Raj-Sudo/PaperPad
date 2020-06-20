@@ -13,6 +13,10 @@ frame_size_logged = False
 points = []
 uncovered_point = True
 points_logged = False
+TL = (0, 0)
+TR = (0, 0)
+BR = (0, 0)
+BL = (0, 0)
 quad_logged = False
 
 
@@ -56,6 +60,39 @@ while camera.isOpened():
         points_logged = True
 
     cv2.imshow('original', frame)
+    
+    if len(points) >= 4:
+        TL = points[0]
+        TR = points[1]
+        BR = points[2]
+        BL = points[3]
+    elif len(points) == 3:
+        TL = points[0]
+        TR = points[1]
+        BR = points[2]
+        BL = (0, 0)
+    elif len(points) == 2:
+        TL = points[0]
+        TR = points[1]
+        BR = (0, 0)
+        BL = (0, 0)
+    elif len(points) == 1:
+        TL = points[0]
+        TR = (0, 0)
+        BR = (0, 0)
+        BL = (0, 0)
+    else:
+        TL = (0, 0)
+        TR = (0, 0)
+        BR = (0, 0)
+        BL = (0, 0)
+    
+    if not quad_logged:
+        print("quad:", TL, TR, BR, BL)
+        quad_logged = True
+
+    fgmask = fgbg.apply(frame)
+    cv2.imshow('frame',fgmask)
 
     # Keyboard press functions
     k = cv2.waitKey(20) & 0xFF
