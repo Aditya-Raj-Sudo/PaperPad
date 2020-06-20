@@ -28,6 +28,13 @@ while camera.isOpened():
 
     cv2.imshow('original', frame)
 
+    if len(points) >= 1:
+        print(frame[points[0][1]-10][points[0][1]-10])
+
+    if not points_logged:
+        print("points:", points)
+        points_logged = True
+
     # Keyboard press functions
     k = cv2.waitKey(20) & 0xFF
     if k == 27:  # press ESC to exit
