@@ -8,7 +8,6 @@ import mousecontrol
 # camera setup
 camera = cv2.VideoCapture(0) # 0 for built-in webcam, 1 for external webcam
 camera.set(10,200)
-fgbg = cv2.createBackgroundSubtractorMOG2(history=1)
 
 # variables
 frame_size_logged = False
@@ -55,7 +54,7 @@ def print_sound(indata, frames, time, status):
 
 
 def mainthread():
-    global camera, fgbg, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
+    global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
 
     while camera.isOpened():
         ret, frame = camera.read()
@@ -108,8 +107,6 @@ def mainthread():
         if not quad_logged:
             print("quad:", TL, TR, BR, BL)
             quad_logged = True
-
-        fgmask = fgbg.apply(frame)
 
         try:
             kernel = np.ones((3,3),np.uint8)
@@ -239,7 +236,7 @@ def mainthread():
 
 
 def soundthread():
-    global camera, fgbg, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
+    global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
     with sounddevice.InputStream(callback=print_sound):
         sounddevice.sleep(60*60*1000)
 
