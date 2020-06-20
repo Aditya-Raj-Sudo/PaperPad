@@ -22,6 +22,10 @@ quad_logged = False
 last_thumb_point = (9999, 9999)
 thumb_pos_locked = False
 mouse_locked = True
+top_line = 0
+bottom_line = 0
+left_line = 0
+right_line = 0
 
 
 def draw_circle(event,x,y,flags,param):
@@ -105,6 +109,11 @@ def mainthread():
             BL = (0, 0)
         
         if not quad_logged:
+            if len(points) >= 4:
+                top_line = (TL[1] + TR[1])//2
+                bottom_line = (BL[1] + BR[1])//2
+                left_line = (TL[0] + BL[0])//2
+                right_line = (TR[0] + BR[0])//2
             print("quad:", TL, TR, BR, BL)
             quad_logged = True
 
