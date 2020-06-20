@@ -21,6 +21,7 @@ BL = (0, 0)
 quad_logged = False
 last_thumb_point = (9999, 9999)
 thumb_pos_locked = False
+mouse_locked = True
 
 
 def draw_circle(event,x,y,flags,param):
@@ -203,7 +204,9 @@ while camera.isOpened():
         
         last_thumb_point = thumb_point
         cv2.circle(frame, thumb_point, 5, (0,0,255), -1)
-        mousecontrol.mouse_move(int(thumb_point[0]), frame.shape[0]-int(thumb_point[1]))
+
+        if not mouse_locked:
+            mousecontrol.mouse_move(int((1920/int(frame.shape[1]))*int(thumb_point[0])), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
 
         num_defects += 1
 
@@ -223,3 +226,8 @@ while camera.isOpened():
             thumb_pos_locked = True
         else:
             thumb_pos_locked = False
+    elif k == ord('b'):
+        if not mouse_locked:
+            mouse_locked = True
+        else:
+            mouse_locked = False
