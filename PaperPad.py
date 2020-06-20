@@ -6,15 +6,31 @@ import math
 camera = cv2.VideoCapture(0) # 0 for built-in webcam, 1 for external webcam
 camera.set(10,200)
 
+
+# Variables
+frame_size_logged = False
+points = []
+uncovered_point = True
+points_logged = False
+quad_logged = False
+
+
 while camera.isOpened():
     ret, frame = camera.read()
-    frame = cv2.bilateralFilter(frame, 5, 50, 100)
+    frame = cv2.bilateralFilter(frame, 5, 50, 100) # smoothing filter
 
-    cv2.imshow("window", frame)
+    if not frame_size_logged:
+        print("frame size:", frame.shape[1], frame.shape[0])
+        frame_size_logged = True
 
+    for point in points:
+        frame = cv2.circle(frame, point, 5, (255,0,0), -1)
+
+    cv2.imshow('original', frame)
+
+    # Keyboard press functions
     k = cv2.waitKey(20) & 0xFF
-
-    if k == 27:
+    if k == 27:  # press ESC to exit
         camera.release()
         cv2.destroyAllWindows()
         break
