@@ -242,3 +242,16 @@ def soundthread():
     global camera, fgbg, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
     with sounddevice.InputStream(callback=print_sound):
         sounddevice.sleep(60*60*1000)
+
+
+# creating threads 
+t1 = threading.Thread(target=mainthread, name='t1')
+t2 = threading.Thread(target=soundthread, name='t2')
+
+# starting threads 
+t1.start() 
+t2.start() 
+
+# wait until all threads finish 
+t1.join() 
+t2.join() 
