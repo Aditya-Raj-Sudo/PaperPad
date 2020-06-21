@@ -25,10 +25,11 @@ mouse_locked = True
 top_line = 0
 bottom_line = 0
 volume = 0
+smoothing_factor = 2
 
 
 # draw circle
-def draw_circle(event,x,y,flags,param):
+def draw_circle(event, x, y, flags, param):
     global points, points_logged, quad_logged
 
     if event == cv2.EVENT_LBUTTONDBLCLK:
@@ -51,7 +52,8 @@ def draw_circle(event,x,y,flags,param):
 
 # round up to even num for mouse movement smoothing
 def round_smoothing(num):
-    return math.ceil(num / 2.0) * 2
+    global smoothing_factor
+    return math.ceil(num / float(smoothing_factor)) * smoothing_factor
 
 
 # print sound bars - dev testing function
@@ -66,7 +68,7 @@ def get_mic_input(indata, frames, time, status):
 
 # main thread
 def mainthread():
-    global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
+    global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked, smoothing_factor
 
     while camera.isOpened():
         # initialize camera
@@ -262,6 +264,14 @@ def mainthread():
                 mouse_locked = True
             else:
                 mouse_locked = False
+        elif k == ord('c'):
+            if smoothing_factor > 0:
+                smoothing_factor -= 1
+                print("smoothing_factor", smoothing_factor)
+        elif k == ord('d'):
+            if smoothing_factor < 10:
+                smoothing_factor += 1
+                print("smoothing_factor", smoothing_factor)
 
 
 # sound thread
