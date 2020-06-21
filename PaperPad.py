@@ -130,7 +130,7 @@ def mainthread():
 
         # detect hand and pen/pencil tip
         try:
-            kernel = np.ones((3,3),np.uint8)
+            kernel = np.ones((3, 3), np.uint8)
 
             # define frame input area
             roi = frame[100:500, 100:500]
@@ -138,17 +138,17 @@ def mainthread():
             hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
             # define skin colour range
-            lower_skin = np.array([0,48,80], dtype=np.uint8)
-            upper_skin = np.array([20,255,255], dtype=np.uint8)
+            lower_skin = np.array([0, 48, 80], dtype=np.uint8)
+            upper_skin = np.array([20, 255, 255], dtype=np.uint8)
 
             # extract skin colour image
             mask = cv2.inRange(hsv, lower_skin, upper_skin)
 
             # dilate the hand to fill dark spots within
-            mask = cv2.dilate(mask,kernel,iterations = 4)
+            mask = cv2.dilate(mask, kernel, iterations=4)
 
             # blur image
-            mask = cv2.GaussianBlur(mask,(5,5),100)
+            mask = cv2.GaussianBlur(mask, (5, 5), 100)
 
             # find contours
             contours, hierarchy = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -157,8 +157,8 @@ def mainthread():
             cnt = max(contours, key = lambda x: cv2.contourArea(x))
 
             # approximate contour
-            epsilon = 0.0005*cv2.arcLength(cnt,True)
-            approx = cv2.approxPolyDP(cnt,epsilon,True)
+            epsilon = 0.0005*cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, epsilon, True)
 
             # make convex hull around hand
             hull = cv2.convexHull(cnt)
