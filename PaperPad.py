@@ -22,8 +22,6 @@ quad_logged = False
 last_thumb_point = (9999, 9999)
 thumb_pos_locked = False
 mouse_locked = True
-top_line = 0
-bottom_line = 0
 volume = 0
 
 
@@ -59,7 +57,7 @@ def get_mic_input(indata, frames, time, status):
     sensitivity = 40 # higher = more sensitive
     volume_norm = int(np.linalg.norm(indata)*sensitivity)
     volume = volume_norm
-    print('|' * volume_norm)
+    # print('|' * volume_norm)
 
 
 # main thread
@@ -120,9 +118,6 @@ def mainthread():
         
         # log quad
         if not quad_logged:
-            if len(points) >= 4:
-                top_line = (TL[1] + TR[1])//2
-                bottom_line = (BL[1] + BR[1])//2
             print("quad:", TL, TR, BR, BL)
             quad_logged = True
 
@@ -234,11 +229,18 @@ def mainthread():
             print("Exception:", e)
 
         if not mouse_locked:
-            mousecontrol.mouse_move(int((1920/int(frame.shape[1]))*int(thumb_point[0])), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
-            if volume > 0:
-                mousecontrol.mouse_down()
-            else:
-                mousecontrol.mouse_up()
+            top_line = (TL[1] + TR[1])//2
+            bottom_line = (BL[1] + BR[1])//2
+            paper_height = top_line - bottom_line
+            if paper_height != 0:
+                small_width = round(abs(TL[0]-TR[0]))
+                big_width = round(abs(BL[0]-BR[0]))
+                position_width = ((big_width - small_width) / paper_height) * (int(thumb_point[1])-top_line)
+                mousecontrol.mouse_move(int(1920/position_width), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
+                if volume > 0:
+                    mousecontrol.mouse_down()
+                else:
+                    mousecontrol.mouse_up()
 
         # Keyboard press functions
         k = cv2.waitKey(20) & 0xFF
@@ -270,9 +272,9 @@ t1 = threading.Thread(target=mainthread, name='t1')
 t2 = threading.Thread(target=soundthread, name='t2')
 
 # start threads
-t1.start()
-t2.start()
+t1.start() 
+t2.start() 
 
 # wait for all threads finish
-t1.join()
-t2.join()
+t1.join() 
+t2.join() 
