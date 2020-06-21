@@ -266,7 +266,6 @@ def mainthread():
 
 # sound thread
 def soundthread():
-    global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
     with sounddevice.InputStream(callback=get_mic_input):
         sounddevice.sleep(60*60*1000)
 
