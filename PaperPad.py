@@ -30,6 +30,7 @@ volume = 0
 # draw circle
 def draw_circle(event,x,y,flags,param):
     global points, points_logged, quad_logged
+
     if event == cv2.EVENT_LBUTTONDBLCLK:
         uncovered_point = True
         for point in points:
@@ -56,6 +57,7 @@ def round_smoothing(num):
 # print sound bars - dev testing function
 def get_mic_input(indata, frames, time, status):
     global volume
+    
     sensitivity = 40 # higher = more sensitive
     volume_norm = int(np.linalg.norm(indata)*sensitivity)
     volume = volume_norm
@@ -171,7 +173,7 @@ def mainthread():
             # find the defects in convex hull with respect to hand
             hull = cv2.convexHull(approx, returnPoints=False)
             defects = cv2.convexityDefects(approx, hull)
-            num_defects = 0
+            # num_defects = 0
             thumb_point = (9999, 9999)
 
             # code for finding num of defects due to fingers
@@ -196,8 +198,8 @@ def mainthread():
                 angle = math.acos((b**2 + c**2 - a**2)/(2*b*c)) * 57
 
                 # ignore angles > 90 and ignore points very close to convex hull (they generally come due to noise)
-                if angle <= 90 and d > 30:
-                    num_defects += 1
+                # if angle <= 90 and d > 30:
+                    # num_defects += 1
                     # cv2.circle(roi, far, 3, [255,0,0], -1)
 
                 # draw lines around hand
@@ -226,7 +228,7 @@ def mainthread():
             last_thumb_point = thumb_point
             cv2.circle(frame, thumb_point, 5, (0,0,255), -1)
 
-            num_defects += 1
+            # num_defects += 1
 
             cv2.imshow('frame', frame)
 
@@ -274,9 +276,9 @@ t1 = threading.Thread(target=mainthread, name='t1')
 t2 = threading.Thread(target=soundthread, name='t2')
 
 # start threads
-t1.start() 
-t2.start() 
+t1.start()
+t2.start()
 
 # wait for all threads finish
-t1.join() 
-t2.join() 
+t1.join()
+t2.join()
