@@ -24,6 +24,7 @@ thumb_pos_locked = False
 mouse_locked = True
 top_line = 0
 bottom_line = 0
+volume = 0
 
 
 # draw circle
@@ -48,14 +49,16 @@ def draw_circle(event,x,y,flags,param):
 
 
 # round up to even num for mouse movement smoothing
-def round_up_to_even(num):
+def round_smoothing(num):
     return math.ceil(num / 2.0) * 2
 
 
 # print sound bars - dev testing function
-def print_sound(indata, frames, time, status):
+def get_mic_input(indata, frames, time, status):
+    global volume
     sensitivity = 40 # higher = more sensitive
     volume_norm = int(np.linalg.norm(indata)*sensitivity)
+    volume = volume_norm
     print('|' * volume_norm)
 
 
@@ -206,25 +209,22 @@ def mainthread():
                 if start[0] < thumb_point[0]:
                     if thumb_pos_locked:
                         if math.sqrt(abs(start[0]+x_trans-thumb_point[0])**2 + abs(start[1]+y_trans-thumb_point[1])**2) < 20:
-                            thumb_point = (round_up_to_even(start[0]+x_trans), round_up_to_even(start[1]+y_trans))
+                            thumb_point = (round_smoothing(start[0]+x_trans), round_smoothing(start[1]+y_trans))
                         else:
                             thumb_point = last_thumb_point
                     else:
-                        thumb_point = (round_up_to_even(start[0]+x_trans), round_up_to_even(start[1]+y_trans))
+                        thumb_point = (round_smoothing(start[0]+x_trans), round_smoothing(start[1]+y_trans))
                 if end[0] < thumb_point[0]:
                     if thumb_pos_locked:
                         if math.sqrt(abs(end[0]+x_trans-thumb_point[0])**2 + abs(end[1]+y_trans-thumb_point[1])**2) < 20:
-                            thumb_point = (round_up_to_even(end[0]+x_trans), round_up_to_even(end[1]+y_trans))
+                            thumb_point = (round_smoothing(end[0]+x_trans), round_smoothing(end[1]+y_trans))
                         else:
                             thumb_point = last_thumb_point
                     else:
-                        thumb_point = (round_up_to_even(end[0]+x_trans), round_up_to_even(end[1]+y_trans))
+                        thumb_point = (round_smoothing(end[0]+x_trans), round_smoothing(end[1]+y_trans))
             
             last_thumb_point = thumb_point
             cv2.circle(frame, thumb_point, 5, (0,0,255), -1)
-            
-            if not mouse_locked:
-                mousecontrol.mouse_move(int((1920/int(frame.shape[1]))*int(thumb_point[0])), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
 
             num_defects += 1
 
@@ -232,6 +232,13 @@ def mainthread():
 
         except Exception as e:
             print("Exception:", e)
+
+        if not mouse_locked:
+            mousecontrol.mouse_move(int((1920/int(frame.shape[1]))*int(thumb_point[0])), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
+            if volume > 0:
+                mousecontrol.mouse_down()
+            else:
+                mousecontrol.mouse_up()
 
         # Keyboard press functions
         k = cv2.waitKey(20) & 0xFF
@@ -254,18 +261,18 @@ def mainthread():
 # sound thread
 def soundthread():
     global camera, frame_size_logged, points, uncovered_point, points_logged, TL, TR, BR, BL, quad_logged, last_thumb_point, thumb_pos_locked, mouse_locked
-    with sounddevice.InputStream(callback=print_sound):
+    with sounddevice.InputStream(callback=get_mic_input):
         sounddevice.sleep(60*60*1000)
 
 
-# creating threads
+# create threads
 t1 = threading.Thread(target=mainthread, name='t1')
 t2 = threading.Thread(target=soundthread, name='t2')
 
-# starting threads
+# start threads
 t1.start()
 t2.start()
 
-# wait until all threads finish
+# wait for all threads finish
 t1.join()
 t2.join()
