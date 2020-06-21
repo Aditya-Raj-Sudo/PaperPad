@@ -22,6 +22,8 @@ quad_logged = False
 last_thumb_point = (9999, 9999)
 thumb_pos_locked = False
 mouse_locked = True
+top_line = 0
+bottom_line = 0
 volume = 0
 
 
@@ -57,7 +59,7 @@ def get_mic_input(indata, frames, time, status):
     sensitivity = 40 # higher = more sensitive
     volume_norm = int(np.linalg.norm(indata)*sensitivity)
     volume = volume_norm
-    # print('|' * volume_norm)
+    print('|' * volume_norm)
 
 
 # main thread
@@ -118,6 +120,9 @@ def mainthread():
         
         # log quad
         if not quad_logged:
+            if len(points) >= 4:
+                top_line = (TL[1] + TR[1])//2
+                bottom_line = (BL[1] + BR[1])//2
             print("quad:", TL, TR, BR, BL)
             quad_logged = True
 
@@ -127,7 +132,7 @@ def mainthread():
 
             # define roi which is a small square on screen
             roi = frame[100:500, 100:500]
-            cv2.rectangle(frame,(100,100),(500,500),(0,255,0),0)
+            # cv2.rectangle(frame,(100,100),(500,500),(0,255,0),0)
             hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
             # range of the skin colour is defined
@@ -226,35 +231,32 @@ def mainthread():
             cv2.imshow('frame', frame)
 
         except Exception as e:
-            print("Exception:", e)
+            if "max() arg" in str(e):
+                print("...")
+            else:
+                print("Exception:", e)
 
+        # move and click mouse
         if not mouse_locked:
-            top_line = (TL[1] + TR[1])//2
-            bottom_line = (BL[1] + BR[1])//2
-            paper_height = top_line - bottom_line
-            if paper_height != 0:
-                small_width = round(abs(TL[0]-TR[0]))
-                big_width = round(abs(BL[0]-BR[0]))
-                position_width = ((big_width - small_width) / paper_height) * (int(thumb_point[1])-top_line)
-                mousecontrol.mouse_move(int(1920/position_width), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
-                if volume > 0:
-                    mousecontrol.mouse_down()
-                else:
-                    mousecontrol.mouse_up()
+            mousecontrol.mouse_move(int((1920/int(frame.shape[1]))*int(thumb_point[0])), int((1080/int(frame.shape[0]))*(frame.shape[0]-int(thumb_point[1]))))
+            if volume > 0:
+                mousecontrol.mouse_down()
+            else:
+                mousecontrol.mouse_up()
 
-        # Keyboard press functions
+        # keyboard press functions
         k = cv2.waitKey(20) & 0xFF
-        if k == 27:  # press ESC to exit
+        if k == 27: # press ESC to exit
             camera.release()
             cv2.destroyAllWindows()
             break
-        elif k == ord('a'):
+        elif k == ord('a'): # press a to dynamically lock pen/pencil tip to thumb position area
             if not thumb_pos_locked:
                 thumb_pos_locked = True
             else:
                 thumb_pos_locked = False
         elif k == ord('b'):
-            if not mouse_locked:
+            if not mouse_locked: # press b to turn off/on mouse control
                 mouse_locked = True
             else:
                 mouse_locked = False
